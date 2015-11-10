@@ -1,4 +1,4 @@
-#include "heapMgrMalloc.h"
+#include "heapMgr.h"
 
 int main(void) {
     init();

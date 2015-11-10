@@ -1,4 +1,4 @@
-#include "heapMgrMalloc.h"
+#include "heapMgr.h"
 
 header* header_ptr(void* ptr) {
     return (header*)ptr - 1;
@@ -18,30 +18,46 @@ int validate_ptr(void* ptr) {
 }
 
 void* allocate(size_t size) {
-    if ((char*)unalloc + headerSize + size > hi) {
+    header* temp;
+
+    if ((char*)unalloc + headerSize + size > hi) {//check upper boundary
         return NULL;
+        //set error
     }
 
+    //set header as 'used'
     temp = (header*)unalloc;
     temp->size = size;
     temp->isFree = 0;
-    temp->payload_ptr = uc +  1;
+    temp->payload_ptr = temp +  1;
     temp->next = NULL;
-    unalloc = temp->payload_ptr + size;
+    unalloc = (char*)temp->payload_ptr + size;
     
-    return temp->payload_ptr;
+    //update used list
+    if ( ulr == NULL ) { //on first mymalloc call set usedlist root
+        ulr = temp;
+        uc = temp;
+    }
+    uc->next = temp;
+    uc = temp;
+
+    return temp->payload_ptr; //return pointer to payload area
 }
 
-void* freeLookup(size_t size) {
-    if( flr != NULL ) {
-        header* temp = flr;
-
-        while (temp && temp->size < size)) {
-            temp = temp->next;
-        }
-        uc = temp;
-        return temp;
+void* freeBlockLookup(size_t size) {
+    header* temp;
+    
+    if ( flr == NULL) {
+        return NULL;
     }
+
+    temp = flr;
+    while (temp && temp->size < size)) {
+        temp = temp->next;
+    }
+    uc = temp;
+    return temp;
+    } 
 }
 
 void* splitBlock(void*) {}
@@ -65,16 +81,8 @@ void* mymalloc(size_t size) {
         return NULL;
         //set error
     }
-    
-    if ( ulr == NULL ) { // on first call to mymalloc
-        ulr = temp;
-    } else {
-        uc->next = temp;
-    }
-    uc = temp;
 
-
-    result = freeLookup(size); // O(N)
+    result = freeBlockLookup(size); // O(N)
     if( result == NULL ) {
         result = allocate(size); // O(1)-new chunk starting off "unalloc" address
         if( result == NULL ) {
@@ -83,8 +91,6 @@ void* mymalloc(size_t size) {
         }
     }
     return result;
-
-
 }
 
 void myfree(void* ptr) {

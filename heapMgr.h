@@ -21,7 +21,7 @@ struct header {
 void* lo = NULL; //lower heap address
 void* hi = NULL; //higher heap address
 void* unalloc = NULL; //pointer to unallocated heap space;
-size_t headerSize = sizeof(header);
+const size_t headerSize = sizeof(header);
 
 /*Below pointers constitute service portion of the heap, but in fact they are located in Initialized Data Segment*/
 header* flr = NULL; //freelist root
@@ -34,7 +34,7 @@ header* temp = NULL; //temporary
 header* header_ptr(void*);
 void* allocate(size_t);//
 int validate_ptr(void*);//check if the ptr was previously allocated by mymalloc/myrealloc 
-void* freeLookup(size_t);//traverse free list to find one of the fits
+void* freeBlockLookup(size_t);//traverse free list to find one of the fits
 void* splitBlock(void);
 void display(header* h);
 void init(void); //prepares heap for use;
