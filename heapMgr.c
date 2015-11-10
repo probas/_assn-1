@@ -4,28 +4,40 @@ header* header_ptr(void* ptr) {
     return (header*)ptr - 1;
 }
 
-int validate_ptr(void* ptr) {
-    header* current = ulr;
+// int validate_ptr(void* ptr) {
+//     header* temp = (header*)ptr - 1;
+
+//     if( temp->payload_ptr == ptr ) {
+//         return 1;
+//     }
+//     return 0;
+// }
+
+header* validate_ptr(void* ptr) {
+    usedCurrent = usedListRoot;
 
     printf("validating...\n"); //remove
-    while(current) {
-        printf("%li\n", current->size);
-        if ( ptr == current->payload_ptr) {
-            return 1;
+
+    while(usedCurrent != NULL) {
+        printf("%li\n", usedCurrent->size);
+        if ( ptr == usedCurrent->payload_ptr) {
+            return usedCurrent;
         }
+        usedPrev = usedCurrent;
+        usedCurrent = usedCurrent->next;
     }
-    return 0;
+    return NULL;
 }
 
 void* allocate(size_t size) {
     header* temp;
 
-    if ((char*)unalloc + headerSize + size > hi) {//check upper boundary
+    if ((char*)unalloc + headerSize + size >(char*)hi) {//check upper boundary
         return NULL;
         //set error
     }
 
-    //set header as 'used'
+    //set header values, block is now 'used'
     temp = (header*)unalloc;
     temp->size = size;
     temp->isFree = 0;
@@ -34,12 +46,12 @@ void* allocate(size_t size) {
     unalloc = (char*)temp->payload_ptr + size;
     
     //update used list
-    if ( ulr == NULL ) { //on first mymalloc call set usedlist root
-        ulr = temp;
-        uc = temp;
+    if ( usedListRoot == NULL ) { //on first mymalloc call set usedlist root
+        usedListRoot = temp;
+        usedCurrent = temp;
     }
-    uc->next = temp;
-    uc = temp;
+    usedCurrent->next = temp;
+    usedCurrent = temp;
 
     return temp->payload_ptr; //return pointer to payload area
 }
@@ -47,24 +59,24 @@ void* allocate(size_t size) {
 header* freeBlockLookup(size_t size) {
     header* temp;
     
-    if ( flr == NULL) {
+    //check if freelist exists
+    if ( freeListRoot == NULL) {
         return NULL;
     }
     
-    temp = flr;
-    while (temp && temp->size < size)) {
+    temp = freeListRoot;
+    while (temp && temp->size < size) { //first fit
         temp = temp->next;
     }
+    //splitblock();
+    temp->size = 
     
     return temp;
 }
 
-void* splitBlock(void*) {}
-
-void display(header* h) {
-
-    printf("\nheader: size %li, free %d, next %p\n", h->size, h->isFree, h->next);
-}
+// void display(header* h) {
+//     printf("\nheader: size %li, free %d, next %p\n", h->size, h->isFree, h->next);
+// }
 
 void init(void) {
     lo = malloc(MALLOC_SIZE);
@@ -74,49 +86,52 @@ void init(void) {
 
 void* mymalloc(size_t size) {
     // place temp pointer here?
-    void* result;
+    header* temp;
 
     if ( size <= 0) {
         return NULL;
         //set error
     }
 
-    result = freeBlockLookup(size); // O(N)
-    if( result == NULL ) {
-        result = allocate(size); // O(1)-new chunk starting off "unalloc" address
-        if( result == NULL ) {
+    temp = freeBlockLookup(size); // O(N)
+    if( temp == NULL ) {
+        temp = allocate(size); // O(1)-new chunk starting off "unalloc" address
+        if( temp == NULL ) {
             return NULL;
             //set error
         }
     }
-    return result;
+
+    return temp->payload_ptr;
 }
 
-void myfree(void* ptr) {
-    if( ptr == NULL) { // the same as: if(!ptr)
-        return; //set error message
-    }
+// void myfree(void* ptr) {
+//     if( ptr == NULL) {
+//         return;
+//         //set error message
+//     }
 
-    if( !validate_ptr(ptr) ) { //check if the ptr was malloc'ed/realloc'ed
-        return; //set error message
-    }
+//     usedCurrent = validate_ptr(ptr);
+//     if(usedCurrent == NULL) { //check if the ptr was malloc'ed/realloc'ed
+//         return NULL;
+//         //set error message
+//     }
+//     usedCurrent->isFree = 1;
+//     usedPrev->next = usedCurrent->next;
+//     freeCurrent->next = usedCurrent;
+//     usedCurrent = freeCurrent;
+// }
 
-    header* current = header_ptr(ptr);
-    flr = current;
-    current->isFree =  1;
-    current->next = unalloc;//?
-}
+// void* myrealloc(void* ptr, size_t newSize) {
+//     assert(newSize >= 0);
 
-void* myrealloc(void* ptr, size_t newSize) {
-    assert(newSize >= 0);
-
-    if ( newSize == 0 ) {
-        myfree(ptr);
-    }
-    if (ptr == NULL) {
-        if (newSize > 0) {
-            return mymalloc(newSize);
-        }
-        return NULL; //??
-    }
-}
+//     if ( newSize == 0 ) {
+//         myfree(ptr);
+//     }
+//     if (ptr == NULL) {
+//         if (newSize > 0) {
+//             return mymalloc(newSize);
+//         }
+//         return NULL; //??
+//     }
+// }

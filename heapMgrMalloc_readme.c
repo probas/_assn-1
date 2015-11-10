@@ -1,4 +1,28 @@
 /*
+My implementation
+
+General:
+Heap block consists of a header ( describe header members)
+Heap is a linked list.
+
+1. malloc
+On first call, the heap contains a single block all the heap space assigned on startup. 
+This cell exists on the heap's free list.
+
+On other calls, memory is taken from the large heap cell, which is returned by malloc. 
+The rest is formed into a new heap cell that consists of all the rest of the memory.
+
+2. on Free
+Heap cell is added to the end of the heap's free list. Subsequent mallocs walk the free list looking for a cell of suitable size.
+
+As can be expected the heap can get fragmented and the heap manager may from time to time, try to merge adjacent heap cells.
+
+
+
+
+
+
+
 ******************************************************
 What constitutes a good malloc impl.?
 
