@@ -44,20 +44,19 @@ void* allocate(size_t size) {
     return temp->payload_ptr; //return pointer to payload area
 }
 
-void* freeBlockLookup(size_t size) {
+header* freeBlockLookup(size_t size) {
     header* temp;
     
     if ( flr == NULL) {
         return NULL;
     }
-
+    
     temp = flr;
     while (temp && temp->size < size)) {
         temp = temp->next;
     }
-    uc = temp;
+    
     return temp;
-    } 
 }
 
 void* splitBlock(void*) {}
